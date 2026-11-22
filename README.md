@@ -24,7 +24,12 @@ the S&P 500 fell 3.7% into correction, and COP31 ran past its deadline.
   Shenzhen, dengue in Brazil, a cancer-pill breakthrough, the Gen Z Youth
   Day of Action, Denmark–Greenland, Nvidia H200. Each card names its source.
 - **Where it happened** — a numbered world map with all 11 stories pinned.
-- **Also on Saturday** — eight more stories in one line each.
+- **Also on Saturday** — 25 more stories in one line each (nos. 12–36):
+  Hormuz tanker attacks and the IRGC drone claim, the Sparta II fire,
+  Denmark's Russia murder-plot accusation, Vance on Iran, the AI
+  data-centre tax, Leapmotor's 2 millionth EV, Mistral's Singapore hub,
+  a claimed Riemann proof in Lean, and more. 36 stories in total:
+  6 regions, 9 fields, 11 drawn cards.
 - **The verdict + How sure are we?** — what the day meant, and which claims
   are REPORTED vs CLAIM vs FORECAST.
 - **Date check** — four stories loud in the headlines that are *not* 21
@@ -40,5 +45,6 @@ mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts   # copies entry.png to out/
 
 ## Sources
 
-Reuters, AP, BBC, Xinhua, WSJ, Carbon Brief, Standard Topic, OneTurn.
+Reuters, AP, BBC, Xinhua, WSJ, CNN, Carbon Brief, Standard Topic,
+OneTurn, IntelChron, Majik, UKMTO, The Verge, InsightEx, Jerusalem Post.
 Every story here happened, or was first reported, on Saturday 21 November 2026.
