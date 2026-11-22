@@ -1,38 +1,50 @@
 #!/usr/bin/env python3
 """Render the front page of Saturday 21 November 2026 as one 1024x1024 image.
-v3: visual-first redesign. Bigger, cleaner world map; a real UTC strip;
-39 stories across 9 regions and 12 fields; tighter, calmer typography.
-Deterministic: no network, no clock, no unseeded randomness. PIL only.
+v4: WARTIME restyle. Aged sepia newsprint with grain, blackletter-style
+heavy serif masthead, WAR EDITION banner, WAR BULLETIN band, double rules,
+column rules, black + blood-red ink only. Same content as v3 (39 stories,
+9 regions, 12 fields, 11 drawn cards, UTC strip, world map, ALSO ON,
+VERDICT, DATE CHECK) — only the visual style changed, not the facts.
+Deterministic: no network, no clock, seeded randomness only. PIL only.
 Run: python3 build-image.py  -> writes entry.png next to this file.
 """
 import os
+import random
 from PIL import Image, ImageDraw, ImageFont
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "entry.png")
-FONT_DIR = "/usr/share/fonts/truetype/dejavu"
+DEJAVU = "/usr/share/fonts/truetype/dejavu"
+LIB = "/usr/share/fonts/truetype/liberation"
+NOTO = "/usr/share/fonts/truetype/noto"
 
-# ---- palette: newsprint, warm paper + navy + red ----
-PAPER = (247, 242, 231)
-INK = (26, 35, 64)
-RED = (179, 32, 44)
-GREY = (110, 108, 100)
-RULE = (26, 35, 64)
-CARD = (255, 253, 247)
-TEAL = (16, 96, 96)
-GOLD = (176, 124, 18)
-SEA = (214, 228, 236)
-LAND = (172, 186, 180)
+# ---- palette: aged wartime newsprint — sepia paper, black ink, blood red ----
+PAPER = (229, 209, 171)
+CARD = (236, 219, 186)
+INK = (24, 20, 15)
+RED = (139, 12, 12)
+GREY = (96, 84, 66)
+RULE = (24, 20, 15)
+SEA = (206, 190, 152)
+LAND = (168, 146, 104)
+SEPIA_DK = (58, 48, 32)
+SEPIA_MD = (120, 100, 66)
+ORANGE = (178, 110, 32)
 
 W, H = 1024, 1024
 
-def font(name, size):
-    return ImageFont.truetype(os.path.join(FONT_DIR, name), size)
+def font(path, size):
+    return ImageFont.truetype(path, size)
 
-F_SERIF = lambda s: font("DejaVuSerif.ttf", s)
-F_SERIF_B = lambda s: font("DejaVuSerif-Bold.ttf", s)
-F_SANS = lambda s: font("DejaVuSans.ttf", s)
-F_SANS_B = lambda s: font("DejaVuSans-Bold.ttf", s)
+# Wartime type: heavy condensed serif for the nameplate, black display serif
+# for headlines, Times-like Liberation Serif for body and card text.
+F_MAST = lambda s: font(os.path.join(NOTO, "NotoSerif-CondensedBlack.ttf"), s)
+F_HEAD = lambda s: font(os.path.join(NOTO, "NotoSerifDisplay-Black.ttf"), s)
+F_SERIF = lambda s: font(os.path.join(LIB, "LiberationSerif-Regular.ttf"), s)
+F_SERIF_B = lambda s: font(os.path.join(LIB, "LiberationSerif-Bold.ttf"), s)
+F_SERIF_I = lambda s: font(os.path.join(LIB, "LiberationSerif-Italic.ttf"), s)
+F_SANS = lambda s: font(os.path.join(DEJAVU, "DejaVuSans.ttf"), s)
+F_SANS_B = lambda s: font(os.path.join(DEJAVU, "DejaVuSans-Bold.ttf"), s)
 
 def wrap(draw, text, fnt, width):
     words, lines, cur = text.split(), [], ""
@@ -59,6 +71,11 @@ def para(draw, xy, text, fnt, color, width, leading=None):
 def hline(draw, x0, x1, y, color=INK, width=2):
     draw.line([(x0, y), (x1, y)], fill=color, width=width)
 
+def double_rule(draw, x0, x1, y, color=INK):
+    """Classic newspaper double rule: thick line over a thin one."""
+    draw.line([(x0, y), (x1, y)], fill=color, width=4)
+    draw.line([(x0, y + 7), (x1, y + 7)], fill=color, width=1)
+
 def flag_bar(draw, x, y, w, h, colors):
     cx = x
     for rgb, share in colors:
@@ -67,7 +84,7 @@ def flag_bar(draw, x, y, w, h, colors):
         cx += sw
 
 def mini_chart(draw, x, y, w, h, values, color=RED):
-    draw.rectangle([x, y, x + w, y + h], fill=(238, 236, 228), outline=GREY)
+    draw.rectangle([x, y, x + w, y + h], fill=(222, 204, 168), outline=GREY)
     if not values:
         return
     lo, hi = min(values), max(values)
@@ -81,39 +98,77 @@ def mini_chart(draw, x, y, w, h, values, color=RED):
     for px, py in pts:
         draw.ellipse([px - 2, py - 2, px + 2, py + 2], fill=color)
 
+def grain(draw, seed=21112026):
+    """Aged-paper grain: deterministic speckles + a few faint stains."""
+    rng = random.Random(seed)
+    # fine dark speckles
+    for _ in range(2600):
+        x = rng.randint(0, W - 1)
+        y = rng.randint(0, H - 1)
+        c = rng.choice([(214, 192, 152), (206, 184, 142), (240, 224, 192)])
+        draw.point((x, y), fill=c)
+    # a few larger faint blotches (stains)
+    for _ in range(9):
+        cx = rng.randint(60, W - 60)
+        cy = rng.randint(60, H - 60)
+        rx = rng.randint(28, 90)
+        ry = rng.randint(18, 55)
+        col = rng.choice([(218, 198, 158), (210, 188, 146)])
+        draw.ellipse([cx - rx, cy - ry, cx + rx, cy + ry], outline=col, width=1)
+    # darker edge vignette: short strokes along the border
+    for _ in range(420):
+        side = rng.randint(0, 3)
+        if side == 0:
+            x, y = rng.randint(0, W - 1), rng.randint(0, 7)
+        elif side == 1:
+            x, y = rng.randint(0, W - 1), rng.randint(H - 8, H - 1)
+        elif side == 2:
+            x, y = rng.randint(0, 7), rng.randint(0, H - 1)
+        else:
+            x, y = rng.randint(W - 8, W - 1), rng.randint(0, H - 1)
+        draw.point((x, y), fill=(200, 178, 136))
+
 img = Image.new("RGB", (W, H), PAPER)
 d = ImageDraw.Draw(img)
+grain(d)
 M = 28
 CW = W - 2 * M
 
-# ================= MASTHEAD =================
-y = 16
-d.text((M, y), "THE WORLD IN ONE PICTURE", font=F_SANS_B(15), fill=RED)
-d.text((W - M - d.textlength("EST. 2026 · ONE DAY, ONE PAGE", font=F_SANS(11)), y + 3),
-       "EST. 2026 · ONE DAY, ONE PAGE", font=F_SANS(11), fill=GREY)
-y += 20
-hline(d, M, W - M, y, INK, 3)
-y += 6
-d.text((M, y), "Saturday 21 November 2026", font=F_SERIF_B(48), fill=INK)
-y += 54
-box_w, box_h = 148, 38
+# ================= MASTHEAD — wartime nameplate =================
+y = 14
+d.text((M, y), "THE WORLD IN ONE PICTURE", font=F_MAST(22), fill=INK)
+# WAR EDITION box, top right
+we = "WAR EDITION"
+we_w = int(d.textlength(we, font=F_SANS_B(13))) + 20
+wx = W - M - we_w
+d.rectangle([wx, y + 1, wx + we_w, y + 24], fill=INK)
+d.text((wx + 10, y + 5), we, font=F_SANS_B(13), fill=(245, 236, 214))
+d.text((M, y + 27), "EST. 2026  ·  ONE DAY, ONE PAGE", font=F_SANS(10), fill=GREY)
+y += 38
+double_rule(d, M, W - M, y)
+y += 10
+d.text((M, y), "SATURDAY 21 NOVEMBER 2026", font=F_HEAD(44), fill=INK)
+y += 46
+box_w, box_h = 148, 20
 bx, by = W - M - box_w, y
 d.rectangle([bx, by, bx + box_w, by + box_h], outline=INK, width=2)
-d.text((bx + 8, by + 3), "NOVEMBER 2026", font=F_SANS_B(12), fill=INK)
-d.text((bx + 8, by + 19), "21 · SATURDAY", font=F_SANS_B(13), fill=RED)
-d.text((M, y + 2), "39 STORIES  ·  9 REGIONS  ·  12 FIELDS  ·  11 DRAWN — EVERY ONE FROM SATURDAY 21 NOVEMBER", font=F_SANS_B(14), fill=INK)
-y += 24
+d.text((bx + 8, by + 4), "SATURDAY 21 NOV 2026", font=F_SERIF_B(11), fill=RED)
+d.text((M, y + 2), "39 STORIES  ·  9 REGIONS  ·  12 FIELDS  ·  11 DRAWN — EVERY ONE FROM SATURDAY 21 NOVEMBER", font=F_SERIF_B(13), fill=INK)
+y += 22
 hline(d, M, W - M, y, INK, 2)
-y += 6
-d.text((M, y), "IRAN HITS US BASES IN BAHRAIN  •  MEXICO SEIZES FBI MOST-WANTED CARTEL BOSS  •  S&P 500 −3.7%",
-       font=F_SANS_B(12), fill=RED)
-y += 18
-hline(d, M, W - M, y, INK, 1)
-y += 6
+y += 5
+# WAR BULLETIN band: black bar, white type — the late-news strip
+band_h = 24
+d.rectangle([M, y, W - M, y + band_h], fill=INK)
+d.text((M + 10, y + 5), "★  WAR BULLETIN  ★", font=F_SANS_B(12), fill=(245, 236, 214))
+bx2 = M + 10 + int(d.textlength("★  WAR BULLETIN  ★  ", font=F_SANS_B(12)))
+d.text((bx2, y + 5), "IRAN HITS US BASES IN BAHRAIN  •  MEXICO SEIZES FBI MOST-WANTED CARTEL BOSS  •  S&P 500 −3.7%",
+       font=F_SERIF_B(12), fill=(245, 236, 214))
+y += band_h + 4
 
 # ================= STATS ROW =================
 stats = [
-    ("−3.7%", "S&P 500, into correction"),
+    ("-3.7%", "S&P 500, into correction"),
     ("11", "killed in Sinaloa raid"),
     ("2", "killed in Kryvyi Rih"),
     ("60", "wounded in Kryvyi Rih"),
@@ -123,17 +178,17 @@ stats = [
 sw = CW // 6
 for i, (num, lab) in enumerate(stats):
     x = M + i * sw
-    d.text((x + 4, y), num, font=F_SERIF_B(24), fill=RED if i == 0 else INK)
-    d.text((x + 4, y + 30), lab, font=F_SANS(10), fill=GREY)
+    d.text((x + 4, y), num, font=F_HEAD(24), fill=RED if i == 0 else INK)
+    d.text((x + 4, y + 30), lab, font=F_SERIF(10), fill=GREY)
     if i:
-        d.line([(x, y + 2), (x, y + 40)], fill=GREY, width=1)
-y += 40
+        d.line([(x, y + 2), (x, y + 38)], fill=GREY, width=1)
+y += 38
 hline(d, M, W - M, y, INK, 2)
 y += 6
 
 # ================= THE DAY BY HOURS — UTC STRIP =================
-d.text((M, y), "THE DAY BY HOURS — ALL TIMES UTC", font=F_SANS_B(13), fill=INK)
-y += 18
+d.text((M, y), "THE DAY BY HOURS — ALL TIMES UTC", font=F_SERIF_B(13), fill=INK)
+y += 16
 strip_y = y
 strip_h = 30
 # UTC scale: 00 - 24 across the content width
@@ -152,7 +207,7 @@ beats = [
 ]
 for hh_label, lab, hour in beats:
     bx = M + CW * hour // 24
-    d.ellipse([bx - 5, strip_y + 3, bx + 5, strip_y + 13], fill=RED, outline=(255, 255, 255), width=1)
+    d.ellipse([bx - 5, strip_y + 3, bx + 5, strip_y + 13], fill=RED, outline=(245, 236, 214), width=1)
     d.text((bx - 24, strip_y + 24), hh_label, font=F_SANS_B(8), fill=INK)
 y = strip_y + strip_h + 6
 hline(d, M, W - M, y, INK, 2)
@@ -165,81 +220,90 @@ def card(draw, x, y, w, h, kicker, title, body, source, art, tag="REPORTED",
     ax, ay, aw = x + 8, y + 8, w - 16
     art(draw, ax, ay, aw, art_h)
     cy = y + 8 + art_h + 6
-    draw.rectangle([x + 8, cy, x + 8 + 62, cy + 13], fill=RED)
-    draw.text((x + 11, cy + 1), tag, font=F_SANS_B(8), fill=(255, 255, 255))
-    draw.text((x + 76, cy + 1), kicker, font=F_SANS_B(8), fill=GREY)
+    draw.rectangle([x + 8, cy, x + 8 + 62, cy + 13], fill=INK)
+    draw.text((x + 11, cy + 1), tag, font=F_SANS_B(8), fill=(245, 236, 214))
+    draw.text((x + 76, cy + 1), kicker, font=F_SANS_B(8), fill=RED)
     cy += 17
     cy = para(draw, (x + 8, cy), title, F_SERIF_B(title_size), INK, w - 16, leading=title_size + 3)
-    cy = para(draw, (x + 8, cy + 2), body, F_SANS(body_size), INK, w - 16, leading=12)
-    draw.text((x + 8, y + h - 15), "Source: " + source, font=F_SANS(8), fill=GREY)
+    cy = para(draw, (x + 8, cy + 2), body, F_SERIF(body_size), INK, w - 16, leading=12)
+    draw.text((x + 8, y + h - 15), "Source: " + source, font=F_SERIF_I(8), fill=GREY)
     return y + h
 
 def art_bahrain(draw, x, y, w, h):
-    draw.rectangle([x, y, x + w, y + h], fill=(24, 30, 58))
+    # night sky in black ink, white stars, red tracer arcs, dark rooftops
+    draw.rectangle([x, y, x + w, y + h], fill=(18, 16, 12))
     for i in range(12):
         px = x + (i * 37) % w
         py = y + (i * 13) % (h // 2)
-        draw.ellipse([px, py, px + 2, py + 2], fill=(255, 255, 255))
-    draw.arc([x + 6, y + 4, x + w - 6, y + h + 26], 200, 340, fill=(255, 180, 60), width=3)
-    draw.arc([x + 22, y, x + w - 22, y + h + 16], 210, 330, fill=(255, 120, 60), width=2)
-    draw.rectangle([x, y + h - 10, x + w, y + h], fill=(10, 12, 26))
+        draw.ellipse([px, py, px + 2, py + 2], fill=(245, 236, 214))
+    draw.arc([x + 6, y + 4, x + w - 6, y + h + 26], 200, 340, fill=ORANGE, width=3)
+    draw.arc([x + 22, y, x + w - 22, y + h + 16], 210, 330, fill=RED, width=2)
+    draw.rectangle([x, y + h - 10, x + w, y + h], fill=(10, 9, 7))
     for bx in range(x + 8, x + w - 8, 26):
-        draw.rectangle([bx, y + h - 18, bx + 14, y + h - 10], fill=(40, 46, 80))
+        draw.rectangle([bx, y + h - 18, bx + 14, y + h - 10], fill=(40, 34, 24))
 
 def art_sinaloa(draw, x, y, w, h):
-    flag_bar(draw, x, y, w, h // 2, [((0, 104, 71), 1 / 3), ((255, 255, 255), 1 / 3), ((206, 17, 38), 1 / 3)])
-    draw.rectangle([x, y + h // 2, x + w, y + h], fill=(30, 26, 22))
+    # flag rendered in sepia tones, flames in red/orange
+    flag_bar(draw, x, y, w, h // 2, [((58, 48, 32), 1 / 3), ((236, 219, 186), 1 / 3), ((139, 12, 12), 1 / 3)])
+    draw.rectangle([x, y + h // 2, x + w, y + h], fill=(30, 26, 20))
     for fx in (x + 12, x + w // 2 - 8, x + w - 30):
-        draw.polygon([(fx, y + h - 4), (fx + 6, y + h - 16), (fx + 12, y + h - 4)], fill=(255, 140, 0))
-        draw.polygon([(fx + 3, y + h - 4), (fx + 6, y + h - 11), (fx + 9, y + h - 4)], fill=(255, 220, 80))
+        draw.polygon([(fx, y + h - 4), (fx + 6, y + h - 16), (fx + 12, y + h - 4)], fill=ORANGE)
+        draw.polygon([(fx + 3, y + h - 4), (fx + 6, y + h - 11), (fx + 9, y + h - 4)], fill=(245, 236, 214))
 
 def art_kryvyi(draw, x, y, w, h):
-    draw.rectangle([x, y, x + w, y + h], fill=(72, 52, 66))
-    draw.rectangle([x, y + h - 14, x + w // 2 - 6, y + h], fill=(28, 22, 30))
-    draw.polygon([(x + w // 2, y + h - 14), (x + w - 10, y + h - 24), (x + w, y + h - 14), (x + w, y + h), (x + w // 2, y + h)], fill=(44, 34, 40))
+    # ruined rooftops in dark sepia, smoke in grey
+    draw.rectangle([x, y, x + w, y + h], fill=(72, 58, 40))
+    draw.rectangle([x, y + h - 14, x + w // 2 - 6, y + h], fill=(28, 22, 16))
+    draw.polygon([(x + w // 2, y + h - 14), (x + w - 10, y + h - 24), (x + w, y + h - 14), (x + w, y + h), (x + w // 2, y + h)], fill=(44, 36, 24))
     for sx, sy, r in [(w // 2 + 14, 7, 6), (w // 2 + 26, 2, 8), (w // 2 + 40, 9, 5)]:
-        draw.ellipse([x + sx - r, y + sy - r, x + sx + r, y + sy + r], fill=(150, 148, 140))
+        draw.ellipse([x + sx - r, y + sy - r, x + sx + r, y + sy + r], fill=(150, 140, 120))
 
 def art_markets(draw, x, y, w, h):
     mini_chart(draw, x, y, w, h, [96, 92, 94, 88, 80, 74, 66, 58], color=RED)
 
 def art_cop(draw, x, y, w, h):
-    draw.rectangle([x, y, x + w, y + h], fill=(16, 96, 96))
-    draw.ellipse([x + w // 2 - 13, y + 4, x + w // 2 + 13, y + 30], outline=(255, 255, 255), width=2)
-    draw.line([(x + w // 2 - 13, y + 17), (x + w // 2 + 13, y + 17)], fill=(255, 255, 255), width=1)
-    draw.line([(x + w // 2, y + 4), (x + w // 2, y + 30)], fill=(255, 255, 255), width=1)
+    # globe in black ink on sepia, white meridians
+    draw.rectangle([x, y, x + w, y + h], fill=INK)
+    draw.ellipse([x + w // 2 - 13, y + 4, x + w // 2 + 13, y + 30], outline=(245, 236, 214), width=2)
+    draw.line([(x + w // 2 - 13, y + 17), (x + w // 2 + 13, y + 17)], fill=(245, 236, 214), width=1)
+    draw.line([(x + w // 2, y + 4), (x + w // 2, y + 30)], fill=(245, 236, 214), width=1)
 
 def art_shenzhen(draw, x, y, w, h):
-    flag_bar(draw, x, y, w, h, [((179, 32, 44), 1 / 3), ((255, 255, 255), 1 / 3), ((0, 60, 120), 1 / 3)])
-    draw.text((x + 6, y + h - 14), "USA · CHINA · RUSSIA", font=F_SANS_B(9), fill=(255, 255, 255))
+    # three powers in black, paper and blood red
+    flag_bar(draw, x, y, w, h, [((139, 12, 12), 1 / 3), ((236, 219, 186), 1 / 3), ((24, 20, 15), 1 / 3)])
+    draw.text((x + 6, y + h - 14), "USA · CHINA · RUSSIA", font=F_SANS_B(9), fill=(245, 236, 214))
 
 def art_dengue(draw, x, y, w, h):
-    draw.rectangle([x, y, x + w, y + h], fill=(222, 240, 222))
-    draw.ellipse([x + w // 2 - 10, y + 6, x + w // 2 + 10, y + 26], outline=TEAL, width=3)
+    # mosquito in black ink on pale sepia
+    draw.rectangle([x, y, x + w, y + h], fill=(226, 210, 176))
+    draw.ellipse([x + w // 2 - 10, y + 6, x + w // 2 + 10, y + 26], outline=INK, width=3)
     for dx, dy in [(-14, -8), (14, -8), (-14, 10), (14, 10)]:
-        draw.line([(x + w // 2, y + 16), (x + w // 2 + dx, y + 16 + dy)], fill=TEAL, width=2)
+        draw.line([(x + w // 2, y + 16), (x + w // 2 + dx, y + 16 + dy)], fill=INK, width=2)
 
 def art_cancer(draw, x, y, w, h):
-    draw.rectangle([x, y, x + w, y + h], fill=(238, 228, 244))
-    draw.ellipse([x + w // 2 - 11, y + 5, x + w // 2 + 11, y + 27], fill=(120, 60, 140))
-    draw.ellipse([x + w // 2 - 5, y + 11, x + w // 2 + 5, y + 21], fill=(255, 255, 255))
-    draw.text((x + w // 2 - 3, y + 12), "1", font=F_SANS_B(8), fill=(120, 60, 140))
+    # pill in blood red on pale sepia
+    draw.rectangle([x, y, x + w, y + h], fill=(226, 210, 176))
+    draw.ellipse([x + w // 2 - 11, y + 5, x + w // 2 + 11, y + 27], fill=RED)
+    draw.ellipse([x + w // 2 - 5, y + 11, x + w // 2 + 5, y + 21], fill=(245, 236, 214))
+    draw.text((x + w // 2 - 3, y + 12), "1", font=F_SANS_B(8), fill=RED)
 
 def art_youth(draw, x, y, w, h):
-    draw.rectangle([x, y, x + w, y + h], fill=(255, 240, 200))
+    # marching figures in sepia brown on pale paper
+    draw.rectangle([x, y, x + w, y + h], fill=(238, 224, 192))
     for i in range(5):
         px = x + 10 + i * (w - 20) // 4
-        draw.ellipse([px - 4, y + 8, px + 4, y + 16], fill=GOLD)
-        draw.rectangle([px - 2, y + 16, px + 2, y + 28], fill=GOLD)
-    draw.line([(x + 6, y + 28), (x + w - 6, y + 28)], fill=GOLD, width=2)
+        draw.ellipse([px - 4, y + 8, px + 4, y + 16], fill=SEPIA_MD)
+        draw.rectangle([px - 2, y + 16, px + 2, y + 28], fill=SEPIA_MD)
+    draw.line([(x + 6, y + 28), (x + w - 6, y + 28)], fill=SEPIA_MD, width=2)
 
 def art_denmark(draw, x, y, w, h):
-    draw.rectangle([x, y, x + w, y + h], fill=(200, 16, 46))
-    draw.rectangle([x + w // 4, y, x + w // 4 + 8, y + h], fill=(255, 255, 255))
-    draw.rectangle([x, y + h // 2 - 4, x + w, y + h // 2 + 4], fill=(255, 255, 255))
+    # Danish cross: blood red field, paper cross (unchanged — already wartime)
+    draw.rectangle([x, y, x + w, y + h], fill=(139, 12, 12))
+    draw.rectangle([x + w // 4, y, x + w // 4 + 8, y + h], fill=(245, 236, 214))
+    draw.rectangle([x, y + h // 2 - 4, x + w, y + h // 2 + 4], fill=(245, 236, 214))
 
 def art_nvidia(draw, x, y, w, h):
-    mini_chart(draw, x, y, w, h, [90, 88, 84, 78, 70, 62, 55, 48], color=(16, 96, 16))
+    mini_chart(draw, x, y, w, h, [90, 88, 84, 78, 70, 62, 55, 48], color=INK)
 
 # --- top row: 3 big cards ---
 big = [
@@ -254,7 +318,7 @@ big = [
      "AP", art_kryvyi),
 ]
 bw = (CW - 2 * 12) // 3
-bh = 158
+bh = 152
 for i, (kick, title, body, src, art) in enumerate(big):
     card(d, M + i * (bw + 12), y, bw, bh, kick, title, body, src, art, art_h=22)
 y += bh + 3
@@ -275,7 +339,7 @@ small1 = [
      "OneTurn", art_dengue),
 ]
 sw2 = (CW - 3 * 12) // 4
-sh = 140
+sh = 136
 for i, (kick, title, body, src, art) in enumerate(small1):
     card(d, M + i * (sw2 + 12), y, sw2, sh, kick, title, body, src, art, title_size=14, art_h=22)
 y += sh + 3
@@ -300,9 +364,9 @@ for i, (kick, title, body, src, art) in enumerate(small2):
 y += sh + 3
 
 # ================= WHERE IT HAPPENED — bigger world map =================
-map_h = 70
+map_h = 66
 d.rectangle([M, y, W - M, y + map_h], fill=SEA, outline=INK, width=1)
-d.text((M + 8, y + 4), "WHERE IT HAPPENED — WORLD MAP", font=F_SANS_B(11), fill=INK)
+d.text((M + 8, y + 4), "WHERE IT HAPPENED — WORLD MAP", font=F_SERIF_B(11), fill=INK)
 def lonlat(lon, lat):
     # Crop the map to the inhabited latitudes (75N to 55S) so the land
     # fills the strip instead of sitting in a thin band.
@@ -340,16 +404,16 @@ for num, lon, lat, dx, dy in pins:
         d.line([(px, py), (px + dx, py + dy)], fill=RED, width=1)
         d.ellipse([px - 2, py - 2, px + 2, py + 2], fill=RED)
         px, py = px + dx, py + dy
-    d.ellipse([px - 7, py - 7, px + 7, py + 7], fill=RED, outline=(255, 255, 255), width=1)
-    d.text((px - 3, py - 6), num, font=F_SANS_B(8), fill=(255, 255, 255))
+    d.ellipse([px - 7, py - 7, px + 7, py + 7], fill=RED, outline=(245, 236, 214), width=1)
+    d.text((px - 3, py - 6), num, font=F_SANS_B(8), fill=(245, 236, 214))
 d.text((M + 8, y + map_h - 14), "1 Bahrain  2 Sinaloa  3 Kryvyi Rih  4 New York  5 Antalya  6 Shenzhen  7 Brazil  8 Denmark  9 China  10 Europe  11 World",
-       font=F_SANS(9), fill=INK)
+       font=F_SERIF(9), fill=INK)
 y += map_h + 4
 
 # ================= ALSO ON + VERDICT =================
 col_w = (CW - 12) // 2
 ax = M
-d.text((ax, y), "ALSO ON SATURDAY 21 NOVEMBER", font=F_SANS_B(12), fill=INK)
+d.text((ax, y), "ALSO ON SATURDAY 21 NOVEMBER", font=F_SERIF_B(12), fill=INK)
 ay = y + 17
 also = [
     (12, "RIYADH", "Saudi downed 3 Houthi missiles."),
@@ -387,29 +451,37 @@ for col in range(2):
     cx = ax + col * (col_w // 2)
     items = also[:n_left] if col == 0 else also[n_left:]
     for row, (num, city, line) in enumerate(items):
-        d.text((cx, ay + row * 10), "%d. %s — %s" % (num, city, line), font=F_SANS(9), fill=INK)
+        ly = ay + row * 10
+        num_s = "%d." % num
+        d.text((cx, ly), num_s, font=F_SERIF_B(9), fill=RED)
+        d.text((cx + d.textlength(num_s, font=F_SERIF_B(9)) + 3, ly),
+               "%s — %s" % (city, line), font=F_SERIF(9), fill=INK)
+    # wartime column rule between the two ALSO ON columns
+    if col == 0:
+        d.line([(ax + col_w // 2 - 6, ay - 2), (ax + col_w // 2 - 6, ay + 14 * 10)],
+               fill=GREY, width=1)
 ay += 14 * 10 + 4
 vx = M + col_w + 12
-d.text((vx, y), "THE VERDICT", font=F_SANS_B(12), fill=RED)
+d.text((vx, y), "THE VERDICT", font=F_SERIF_B(12), fill=RED)
 vy = para(d, (vx, y + 17),
           "Two wars heating up at once — Iran hit US forces in the Gulf, Russia hit Zelensky’s hometown — and the AI rout turned a wobble into a correction.",
-          F_SANS(10), INK, col_w, leading=13)
+          F_SERIF(10), INK, col_w, leading=13)
 vy += 4
-d.text((vx, vy), "HOW SURE ARE WE?  ", font=F_SANS_B(10), fill=INK)
+d.text((vx, vy), "HOW SURE ARE WE?  ", font=F_SERIF_B(10), fill=INK)
 vy += 14
 for lab, desc in [("REPORTED", "confirmed by a named source"),
                   ("CLAIM", "one side’s claim, unverified"),
                   ("FORECAST", "expected, not what happened")]:
     d.rectangle([vx, vy + 1, vx + 58, vy + 12], fill=RED if lab == "REPORTED" else INK)
-    d.text((vx + 4, vy + 2), lab, font=F_SANS_B(8), fill=(255, 255, 255))
-    d.text((vx + 64, vy + 2), desc, font=F_SANS(9), fill=INK)
+    d.text((vx + 4, vy + 2), lab, font=F_SANS_B(8), fill=(245, 236, 214))
+    d.text((vx + 64, vy + 2), desc, font=F_SERIF(9), fill=INK)
     vy += 14
 y = max(ay, vy) + 2
 hline(d, M, W - M, y, INK, 1)
 y += 4
 
 # ================= DATE CHECK =================
-d.text((M, y), "DATE CHECK — LOUD IN THE HEADLINES, BUT NOT 21 NOVEMBER NEWS", font=F_SANS_B(11), fill=INK)
+d.text((M, y), "DATE CHECK — LOUD IN THE HEADLINES, BUT NOT 21 NOVEMBER NEWS", font=F_SERIF_B(11), fill=INK)
 y += 12
 dc = [
     "✕  Shenzhen Trump–Xi–Putin summit itself: 20 Nov.",
@@ -419,15 +491,15 @@ dc = [
 ]
 for col in range(2):
     for row in range(2):
-        d.text((M + col * (CW // 2), y + row * 10), dc[col * 2 + row], font=F_SANS(10), fill=GREY)
+        d.text((M + col * (CW // 2), y + row * 10), dc[col * 2 + row], font=F_SERIF(10), fill=GREY)
 y += 2 * 10 + 4
-hline(d, M, W - M, y, INK, 2)
-y += 4
+double_rule(d, M, W - M, y)
+y += 10
 
 # ================= FOOTER =================
 y = para(d, (M, y),
          "Every story here happened, or was first reported, on Saturday 21 November 2026. Sources: Reuters, AP, BBC, Xinhua, WSJ, CNN, Carbon Brief, Standard Topic, OneTurn, IntelChron, Majik, UKMTO, The Verge, InsightEx, Jerusalem Post, Radarr Africa, LiveScore.",
-         F_SANS(10), GREY, CW, leading=12)
+         F_SERIF_I(10), GREY, CW, leading=12)
 
 print("final y =", y, "canvas H =", H)
 assert y <= H - 14, "layout overflow: final y %d > %d" % (y, H - 14)
