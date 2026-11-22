@@ -90,14 +90,14 @@ d.text((W - M - d.textlength("EST. 2026 · ONE DAY, ONE PAGE", font=F_SANS(11)),
 y += 20
 hline(d, M, W - M, y, INK, 3)
 y += 6
-d.text((M, y), "Saturday 21 November 2026", font=F_SERIF_B(50), fill=INK)
-y += 56
+d.text((M, y), "Saturday 21 November 2026", font=F_SERIF_B(48), fill=INK)
+y += 54
 box_w, box_h = 148, 38
 bx, by = W - M - box_w, y
 d.rectangle([bx, by, bx + box_w, by + box_h], outline=INK, width=2)
 d.text((bx + 8, by + 3), "NOVEMBER 2026", font=F_SANS_B(12), fill=INK)
 d.text((bx + 8, by + 19), "21 · SATURDAY", font=F_SANS_B(13), fill=RED)
-d.text((M, y + 2), "11 STORIES  ·  EVERY ONE FROM SATURDAY 21 NOVEMBER", font=F_SANS_B(14), fill=INK)
+d.text((M, y + 2), "36 STORIES  ·  6 REGIONS  ·  9 FIELDS  ·  11 DRAWN — EVERY ONE FROM SATURDAY 21 NOVEMBER", font=F_SANS_B(14), fill=INK)
 d.text((M, y + 22), "The day the world turned: war, markets, climate — and one arrest that shook a cartel.",
        font=F_SANS(12), fill=GREY)
 y += 40
@@ -124,8 +124,8 @@ for i, (num, lab) in enumerate(stats):
     d.text((x + 4, y), num, font=F_SERIF_B(24), fill=RED if i == 0 else INK)
     d.text((x + 4, y + 30), lab, font=F_SANS(10), fill=GREY)
     if i:
-        d.line([(x, y + 2), (x, y + 44)], fill=GREY, width=1)
-y += 46
+        d.line([(x, y + 2), (x, y + 42)], fill=GREY, width=1)
+y += 44
 hline(d, M, W - M, y, INK, 2)
 y += 6
 
@@ -149,7 +149,7 @@ for i, (hh, lab) in enumerate(hours):
     d.text((x + 2, ty + 15), lab, font=F_SANS(10), fill=INK)
 y = ty + 26
 hline(d, M, W - M, y, INK, 2)
-y += 8
+y += 6
 
 # ================= STORY CARDS =================
 def card(draw, x, y, w, h, kicker, title, body, source, art, tag="REPORTED",
@@ -163,7 +163,7 @@ def card(draw, x, y, w, h, kicker, title, body, source, art, tag="REPORTED",
     draw.text((x + 76, cy + 1), kicker, font=F_SANS_B(8), fill=GREY)
     cy += 17
     cy = para(draw, (x + 8, cy), title, F_SERIF_B(title_size), INK, w - 16, leading=title_size + 3)
-    cy = para(draw, (x + 8, cy + 2), body, F_SANS(body_size), INK, w - 16, leading=13)
+    cy = para(draw, (x + 8, cy + 2), body, F_SANS(body_size), INK, w - 16, leading=12)
     draw.text((x + 8, y + h - 15), "Source: " + source, font=F_SANS(8), fill=GREY)
     return y + h
 
@@ -247,10 +247,10 @@ big = [
      "AP", art_kryvyi),
 ]
 bw = (CW - 2 * 12) // 3
-bh = 172
+bh = 158
 for i, (kick, title, body, src, art) in enumerate(big):
-    card(d, M + i * (bw + 12), y, bw, bh, kick, title, body, src, art)
-y += bh + 6
+    card(d, M + i * (bw + 12), y, bw, bh, kick, title, body, src, art, art_h=26)
+y += bh + 4
 
 # --- second row: 4 small cards ---
 small1 = [
@@ -268,10 +268,10 @@ small1 = [
      "OneTurn", art_dengue),
 ]
 sw2 = (CW - 3 * 12) // 4
-sh = 152
+sh = 146
 for i, (kick, title, body, src, art) in enumerate(small1):
-    card(d, M + i * (sw2 + 12), y, sw2, sh, kick, title, body, src, art, title_size=14, art_h=32)
-y += sh + 6
+    card(d, M + i * (sw2 + 12), y, sw2, sh, kick, title, body, src, art, title_size=14, art_h=26)
+y += sh + 4
 
 # --- third row: 4 small cards ---
 small2 = [
@@ -289,11 +289,11 @@ small2 = [
      "Standard Topic", art_nvidia),
 ]
 for i, (kick, title, body, src, art) in enumerate(small2):
-    card(d, M + i * (sw2 + 12), y, sw2, sh, kick, title, body, src, art, title_size=14, art_h=32)
-y += sh + 6
+    card(d, M + i * (sw2 + 12), y, sw2, sh, kick, title, body, src, art, title_size=14, art_h=26)
+y += sh + 4
 
 # ================= WHERE IT HAPPENED =================
-map_h = 70
+map_h = 54
 d.rectangle([M, y, W - M, y + map_h], fill=(222, 232, 238), outline=INK, width=1)
 d.text((M + 8, y + 4), "WHERE IT HAPPENED", font=F_SANS_B(11), fill=INK)
 def lonlat(lon, lat):
@@ -329,22 +329,40 @@ ax = M
 d.text((ax, y), "ALSO ON SATURDAY 21 NOVEMBER", font=F_SANS_B(12), fill=INK)
 ay = y + 17
 also = [
-    ("RIYADH", "Saudi downed 3 Houthi missiles."),
-    ("YONGBYON", "N. Korea expanded enrichment."),
-    ("HORMUZ", "Tanker attacks cut shipping 15%."),
-    ("NEW YORK", "Anthropic slid, closed $88.91."),
-    ("DELHI", "Modi opened SCO dialogue."),
-    ("GULF OF FINLAND", "Drones hit a cargo ship."),
-    ("GAZA", "Seven hurt by Israeli fire."),
-    ("BASRA", "Energy facility fire, 4 killed."),
+    (12, "RIYADH", "Saudi downed 3 Houthi missiles."),
+    (13, "YONGBYON", "N. Korea expanded enrichment."),
+    (14, "HORMUZ", "Tanker attacks cut shipping 15%."),
+    (15, "NEW YORK", "Anthropic slid, closed $88.91."),
+    (16, "DELHI", "Modi opened SCO dialogue."),
+    (17, "GULF OF FINLAND", "Sparta II on fire."),
+    (18, "GAZA", "Seven hurt by Israeli fire."),
+    (19, "BASRA", "Energy facility fire, 4 killed."),
+    (20, "KHASAB", "Two more tankers hit near Oman."),
+    (21, "COPENHAGEN", "Russia murder plot alleged."),
+    (22, "OTTAWA", "Unaware of Hegseth memo."),
+    (23, "WASHINGTON", "Vance rejects nuke claim."),
+    (24, "KYIV", "Crimea Bridge hits called justified."),
+    (25, "SHENZHEN", "Trump and Xi hold APEC talks."),
+    (26, "QESHM", "IRGC claims downing US drone."),
+    (27, "WASHINGTON", "Trump eyes AI-centre tax."),
+    (28, "TOKYO", "Sila signs Panasonic anode deal."),
+    (29, "CHINA", "Leapmotor passes 2 million EVs."),
+    (30, "SINGAPORE", "Mistral AI picks Singapore hub."),
+    (31, "ANTHROPIC", "Riemann proof claim in Lean."),
+    (32, "POLAND", "Russian missiles enter SE Poland."),
+    (33, "KRYVYI RIH", "Triple-tap kills boy, 7."),
+    (34, "ANTALYA", "COP31 nears final deal Saturday."),
+    (35, "SINALOA", "11 dead; fans flee gunfire."),
+    (36, "BRAZIL", "Dengue cut ~69% in child study."),
 ]
-# two columns of 4
+# two columns: 13 left, 12 right; one line per item, numbered on from the 11 cards
+n_left = 13
 for col in range(2):
     cx = ax + col * (col_w // 2)
-    for row in range(4):
-        city, line = also[col * 4 + row]
-        para(d, (cx, ay + row * 13), "• " + city + " — " + line, F_SANS(9), INK, col_w // 2 - 8, leading=11)
-ay += 4 * 13 + 4
+    items = also[:n_left] if col == 0 else also[n_left:]
+    for row, (num, city, line) in enumerate(items):
+        d.text((cx, ay + row * 10), "%d. %s — %s" % (num, city, line), font=F_SANS(9), fill=INK)
+ay += 13 * 10 + 4
 vx = M + col_w + 12
 d.text((vx, y), "THE VERDICT", font=F_SANS_B(12), fill=RED)
 vy = para(d, (vx, y + 17),
@@ -362,11 +380,11 @@ for lab, desc in [("REPORTED", "confirmed by a named source"),
     vy += 14
 y = max(ay, vy) + 2
 hline(d, M, W - M, y, INK, 1)
-y += 6
+y += 4
 
 # ================= DATE CHECK =================
 d.text((M, y), "DATE CHECK — LOUD IN THE HEADLINES, BUT NOT 21 NOVEMBER NEWS", font=F_SANS_B(11), fill=INK)
-y += 15
+y += 13
 dc = [
     "✕  Shenzhen Trump–Xi–Putin summit itself: 20 Nov.",
     "✕  World Court: Myanmar genocide ruling: 20 Nov.",
@@ -375,15 +393,15 @@ dc = [
 ]
 for col in range(2):
     for row in range(2):
-        d.text((M + col * (CW // 2), y + row * 12), dc[col * 2 + row], font=F_SANS(10), fill=GREY)
-y += 2 * 12 + 4
+        d.text((M + col * (CW // 2), y + row * 10), dc[col * 2 + row], font=F_SANS(10), fill=GREY)
+y += 2 * 10 + 4
 hline(d, M, W - M, y, INK, 2)
-y += 6
+y += 4
 
 # ================= FOOTER =================
-d.text((M, y),
-       "Every story here happened, or was first reported, on Saturday 21 November 2026. Sources: Reuters, AP, BBC, Xinhua, WSJ, Carbon Brief, Standard Topic, OneTurn.",
-       font=F_SANS(10), fill=GREY)
+y = para(d, (M, y),
+         "Every story here happened, or was first reported, on Saturday 21 November 2026. Sources: Reuters, AP, BBC, Xinhua, WSJ, CNN, Carbon Brief, Standard Topic, OneTurn, IntelChron, Majik, UKMTO, The Verge, InsightEx, Jerusalem Post.",
+         F_SANS(10), GREY, CW, leading=12)
 
 print("final y =", y, "canvas H =", H)
 assert y <= H - 14, "layout overflow: final y %d > %d" % (y, H - 14)
