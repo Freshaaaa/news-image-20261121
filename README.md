@@ -19,17 +19,24 @@ the S&P 500 fell 3.7% into correction, and COP31 ran past its deadline.
 - **Stats row** — six numbers that defined the day (−3.7% S&P 500, 11 killed
   in Sinaloa, 2 killed and 60 wounded in Kryvyi Rih, 109–0 Denmark vote,
   25 nations in the youth walkout).
-- **The day by hours** — morning to night, five beats of the day.
+- **The day by hours — UTC strip** — the day's five beats on a 00–24 UTC
+  scale, so the timeline is anchored to a real clock, not just part-of-day
+  labels.
 - **11 story cards** — Bahrain, Sinaloa, Kryvyi Rih, markets, COP31,
   Shenzhen, dengue in Brazil, a cancer-pill breakthrough, the Gen Z Youth
   Day of Action, Denmark–Greenland, Nvidia H200. Each card names its source.
-- **Where it happened** — a numbered world map with all 11 stories pinned.
-- **Also on Saturday** — 25 more stories in one line each (nos. 12–36):
+- **Where it happened** — a bigger world map (Natural Earth style,
+  cropped to the inhabited latitudes so the land reads) with all 11
+  stories pinned; clustered pins use leader lines so every number stays
+  readable.
+- **Also on Saturday** — 28 more stories in one line each (nos. 12–39):
   Hormuz tanker attacks and the IRGC drone claim, the Sparta II fire,
   Denmark's Russia murder-plot accusation, Vance on Iran, the AI
   data-centre tax, Leapmotor's 2 millionth EV, Mistral's Singapore hub,
-  a claimed Riemann proof in Lean, and more. 36 stories in total:
-  6 regions, 9 fields, 11 drawn cards.
+  a claimed Riemann proof in Lean, and three new ones for v3 — Zimbabwe
+  taxing lithium exports (Harare), Cyclone Xavier weakening after a
+  Category 5 peak (Cook Islands), and Leeds stunning Chelsea 4-1.
+  39 stories in total: 9 regions, 12 fields, 11 drawn cards.
 - **The verdict + How sure are we?** — what the day meant, and which claims
   are REPORTED vs CLAIM vs FORECAST.
 - **Date check** — four stories loud in the headlines that are *not* 21
@@ -46,5 +53,6 @@ mkdir -p out && MAKEFUN_OUTPUT_DIR=out node main.ts   # copies entry.png to out/
 ## Sources
 
 Reuters, AP, BBC, Xinhua, WSJ, CNN, Carbon Brief, Standard Topic,
-OneTurn, IntelChron, Majik, UKMTO, The Verge, InsightEx, Jerusalem Post.
+OneTurn, IntelChron, Majik, UKMTO, The Verge, InsightEx, Jerusalem Post,
+Radarr Africa, LiveScore.
 Every story here happened, or was first reported, on Saturday 21 November 2026.

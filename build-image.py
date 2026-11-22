@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 """Render the front page of Saturday 21 November 2026 as one 1024x1024 image.
+v3: visual-first redesign. Bigger, cleaner world map; a real UTC strip;
+39 stories across 9 regions and 12 fields; tighter, calmer typography.
 Deterministic: no network, no clock, no unseeded randomness. PIL only.
 Run: python3 build-image.py  -> writes entry.png next to this file.
 """
@@ -10,7 +12,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.join(HERE, "entry.png")
 FONT_DIR = "/usr/share/fonts/truetype/dejavu"
 
-# ---- palette: newsprint ----
+# ---- palette: newsprint, warm paper + navy + red ----
 PAPER = (247, 242, 231)
 INK = (26, 35, 64)
 RED = (179, 32, 44)
@@ -19,6 +21,8 @@ RULE = (26, 35, 64)
 CARD = (255, 253, 247)
 TEAL = (16, 96, 96)
 GOLD = (176, 124, 18)
+SEA = (214, 228, 236)
+LAND = (172, 186, 180)
 
 W, H = 1024, 1024
 
@@ -97,10 +101,8 @@ bx, by = W - M - box_w, y
 d.rectangle([bx, by, bx + box_w, by + box_h], outline=INK, width=2)
 d.text((bx + 8, by + 3), "NOVEMBER 2026", font=F_SANS_B(12), fill=INK)
 d.text((bx + 8, by + 19), "21 · SATURDAY", font=F_SANS_B(13), fill=RED)
-d.text((M, y + 2), "36 STORIES  ·  6 REGIONS  ·  9 FIELDS  ·  11 DRAWN — EVERY ONE FROM SATURDAY 21 NOVEMBER", font=F_SANS_B(14), fill=INK)
-d.text((M, y + 22), "The day the world turned: war, markets, climate — and one arrest that shook a cartel.",
-       font=F_SANS(12), fill=GREY)
-y += 40
+d.text((M, y + 2), "39 STORIES  ·  9 REGIONS  ·  12 FIELDS  ·  11 DRAWN — EVERY ONE FROM SATURDAY 21 NOVEMBER", font=F_SANS_B(14), fill=INK)
+y += 24
 hline(d, M, W - M, y, INK, 2)
 y += 6
 d.text((M, y), "IRAN HITS US BASES IN BAHRAIN  •  MEXICO SEIZES FBI MOST-WANTED CARTEL BOSS  •  S&P 500 −3.7%",
@@ -124,36 +126,41 @@ for i, (num, lab) in enumerate(stats):
     d.text((x + 4, y), num, font=F_SERIF_B(24), fill=RED if i == 0 else INK)
     d.text((x + 4, y + 30), lab, font=F_SANS(10), fill=GREY)
     if i:
-        d.line([(x, y + 2), (x, y + 42)], fill=GREY, width=1)
-y += 44
+        d.line([(x, y + 2), (x, y + 40)], fill=GREY, width=1)
+y += 40
 hline(d, M, W - M, y, INK, 2)
 y += 6
 
-# ================= THE DAY BY HOURS =================
-d.text((M, y), "THE DAY BY HOURS", font=F_SANS_B(13), fill=INK)
+# ================= THE DAY BY HOURS — UTC STRIP =================
+d.text((M, y), "THE DAY BY HOURS — ALL TIMES UTC", font=F_SANS_B(13), fill=INK)
 y += 18
-hours = [
-    ("MORNING", "Mexico: Chapo Isidro captured"),
-    ("MIDDAY", "Kryvyi Rih: 2 dead, 60 hurt"),
-    ("AFTERNOON", "Markets: S&P −3.7%, correction"),
-    ("EVENING", "COP31: past deadline, no deal"),
-    ("NIGHT", "Iran hits US bases"),
+strip_y = y
+strip_h = 30
+# UTC scale: 00 - 24 across the content width
+d.line([(M, strip_y + 8), (W - M, strip_y + 8)], fill=GREY, width=1)
+for hh in (0, 6, 12, 18, 24):
+    tx = M + CW * hh // 24
+    d.line([(tx, strip_y + 4), (tx, strip_y + 12)], fill=GREY, width=1)
+    lab = "%02d" % hh
+    d.text((tx - 7, strip_y + 14), lab, font=F_SANS(9), fill=GREY)
+beats = [
+    ("MORNING", "Mexico: Chapo Isidro captured", 7),
+    ("MIDDAY", "Kryvyi Rih: 2 dead, 60 hurt", 12),
+    ("AFTERNOON", "Markets: S&P −3.7%, correction", 15),
+    ("EVENING", "COP31: past deadline, no deal", 18),
+    ("NIGHT", "Iran hits US bases", 21),
 ]
-hw = CW // 5
-ty = y
-d.line([(M + 6, ty + 6), (W - M - 6, ty + 6)], fill=GREY, width=1)
-for i, (hh, lab) in enumerate(hours):
-    x = M + i * hw
-    d.ellipse([x + 2, ty + 2, x + 10, ty + 10], fill=RED)
-    d.text((x + 14, ty), hh, font=F_SANS_B(11), fill=INK)
-    d.text((x + 2, ty + 15), lab, font=F_SANS(10), fill=INK)
-y = ty + 26
+for hh_label, lab, hour in beats:
+    bx = M + CW * hour // 24
+    d.ellipse([bx - 5, strip_y + 3, bx + 5, strip_y + 13], fill=RED, outline=(255, 255, 255), width=1)
+    d.text((bx - 24, strip_y + 24), hh_label, font=F_SANS_B(8), fill=INK)
+y = strip_y + strip_h + 6
 hline(d, M, W - M, y, INK, 2)
 y += 6
 
 # ================= STORY CARDS =================
 def card(draw, x, y, w, h, kicker, title, body, source, art, tag="REPORTED",
-         title_size=15, body_size=10, art_h=34):
+         title_size=15, body_size=10, art_h=22):
     draw.rectangle([x, y, x + w, y + h], fill=CARD, outline=INK, width=1)
     ax, ay, aw = x + 8, y + 8, w - 16
     art(draw, ax, ay, aw, art_h)
@@ -249,8 +256,8 @@ big = [
 bw = (CW - 2 * 12) // 3
 bh = 158
 for i, (kick, title, body, src, art) in enumerate(big):
-    card(d, M + i * (bw + 12), y, bw, bh, kick, title, body, src, art, art_h=26)
-y += bh + 4
+    card(d, M + i * (bw + 12), y, bw, bh, kick, title, body, src, art, art_h=22)
+y += bh + 3
 
 # --- second row: 4 small cards ---
 small1 = [
@@ -268,10 +275,10 @@ small1 = [
      "OneTurn", art_dengue),
 ]
 sw2 = (CW - 3 * 12) // 4
-sh = 146
+sh = 140
 for i, (kick, title, body, src, art) in enumerate(small1):
-    card(d, M + i * (sw2 + 12), y, sw2, sh, kick, title, body, src, art, title_size=14, art_h=26)
-y += sh + 4
+    card(d, M + i * (sw2 + 12), y, sw2, sh, kick, title, body, src, art, title_size=14, art_h=22)
+y += sh + 3
 
 # --- third row: 4 small cards ---
 small2 = [
@@ -289,34 +296,50 @@ small2 = [
      "Standard Topic", art_nvidia),
 ]
 for i, (kick, title, body, src, art) in enumerate(small2):
-    card(d, M + i * (sw2 + 12), y, sw2, sh, kick, title, body, src, art, title_size=14, art_h=26)
-y += sh + 4
+    card(d, M + i * (sw2 + 12), y, sw2, sh, kick, title, body, src, art, title_size=14, art_h=22)
+y += sh + 3
 
-# ================= WHERE IT HAPPENED =================
-map_h = 54
-d.rectangle([M, y, W - M, y + map_h], fill=(222, 232, 238), outline=INK, width=1)
-d.text((M + 8, y + 4), "WHERE IT HAPPENED", font=F_SANS_B(11), fill=INK)
+# ================= WHERE IT HAPPENED — bigger world map =================
+map_h = 70
+d.rectangle([M, y, W - M, y + map_h], fill=SEA, outline=INK, width=1)
+d.text((M + 8, y + 4), "WHERE IT HAPPENED — WORLD MAP", font=F_SANS_B(11), fill=INK)
 def lonlat(lon, lat):
-    return (M + 8 + (lon + 180) / 360 * (CW - 16),
-            y + 20 + (90 - lat) / 180 * (map_h - 28))
+    # Crop the map to the inhabited latitudes (75N to 55S) so the land
+    # fills the strip instead of sitting in a thin band.
+    return (M + 10 + (lon + 180) / 360 * (CW - 20),
+            y + 20 + (75 - lat) / 130 * (map_h - 34))
+# Simplified but recognisable continent outlines (Natural Earth style).
 continents = [
-    [(-168, 66), (-140, 70), (-120, 72), (-95, 70), (-80, 62), (-75, 45), (-80, 30), (-95, 20), (-110, 22), (-125, 40), (-150, 60), (-168, 66)],
-    [(-80, 10), (-60, 5), (-50, -5), (-40, -20), (-60, -35), (-70, -20), (-75, 0), (-80, 10)],
-    [(-10, 36), (10, 38), (30, 36), (40, 45), (30, 60), (10, 60), (-5, 50), (-10, 36)],
-    [(35, 5), (50, 10), (45, -5), (35, -25), (20, -30), (15, 0), (35, 5)],
-    [(60, 70), (100, 75), (140, 72), (160, 65), (140, 45), (120, 40), (100, 20), (80, 10), (60, 25), (45, 40), (60, 70)],
-    [(113, -12), (130, -12), (145, -15), (150, -30), (140, -38), (125, -32), (113, -22), (113, -12)],
+    # North America
+    [(-168, 66), (-150, 70), (-135, 69), (-125, 71), (-115, 73), (-105, 70), (-95, 80), (-85, 80), (-80, 73), (-75, 68), (-65, 62), (-55, 52), (-60, 46), (-70, 42), (-75, 35), (-80, 31), (-81, 26), (-88, 21), (-95, 18), (-100, 16), (-105, 20), (-112, 24), (-117, 33), (-124, 42), (-124, 49), (-135, 58), (-150, 60), (-162, 58), (-168, 66)],
+    # South America
+    [(-80, 10), (-77, 4), (-72, -3), (-70, -12), (-70, -20), (-68, -30), (-65, -40), (-68, -50), (-66, -55), (-70, -52), (-68, -45), (-62, -38), (-55, -34), (-48, -28), (-40, -20), (-35, -8), (-38, -3), (-45, 0), (-52, 5), (-60, 8), (-70, 11), (-80, 10)],
+    # Europe
+    [(-10, 36), (-9, 43), (-2, 48), (0, 50), (4, 53), (8, 57), (10, 59), (6, 61), (12, 56), (18, 56), (21, 55), (24, 59), (28, 61), (30, 63), (32, 70), (40, 68), (45, 66), (42, 62), (38, 58), (34, 54), (30, 50), (28, 45), (30, 42), (24, 40), (20, 40), (15, 44), (10, 44), (8, 39), (3, 38), (-2, 37), (-10, 36)],
+    # Africa
+    [(-6, 35), (0, 36), (10, 37), (12, 34), (20, 32), (30, 31), (35, 28), (38, 22), (42, 15), (48, 11), (51, 10), (46, 5), (42, 0), (40, -10), (38, -18), (35, -25), (32, -29), (28, -33), (20, -35), (16, -30), (12, -18), (9, -5), (9, 4), (0, 5), (-8, 5), (-13, 8), (-16, 12), (-17, 15), (-16, 20), (-15, 25), (-10, 30), (-6, 35)],
+    # Asia
+    [(30, 36), (36, 36), (40, 38), (44, 40), (48, 42), (52, 44), (56, 46), (60, 50), (65, 54), (68, 58), (72, 62), (75, 68), (80, 73), (88, 75), (96, 76), (104, 77), (112, 74), (120, 73), (128, 72), (136, 72), (144, 70), (152, 68), (160, 66), (170, 66), (178, 65), (172, 62), (165, 60), (158, 53), (152, 59), (145, 58), (142, 52), (140, 44), (136, 38), (130, 33), (127, 35), (122, 31), (120, 25), (115, 22), (110, 20), (108, 13), (105, 9), (100, 7), (97, 10), (94, 17), (91, 22), (88, 22), (85, 19), (80, 13), (77, 8), (75, 14), (72, 20), (69, 22), (66, 25), (62, 25), (58, 26), (55, 27), (52, 28), (50, 30), (48, 30), (44, 29), (40, 31), (35, 32), (30, 36)],
+    # Australia
+    [(113, -22), (114, -30), (115, -35), (120, -34), (125, -32), (130, -32), (135, -35), (140, -38), (145, -38), (150, -37), (153, -32), (153, -27), (150, -22), (146, -19), (142, -15), (142, -11), (137, -12), (135, -12), (132, -12), (130, -13), (126, -14), (122, -17), (118, -20), (113, -22)],
 ]
 for poly in continents:
     pts = [lonlat(lon, lat) for lon, lat in poly]
-    d.polygon(pts, fill=(168, 182, 178))
+    d.polygon(pts, fill=LAND)
 pins = [
-    ("1", 51, 26), ("2", -107, 25), ("3", 33, 48), ("4", -74, 41),
-    ("5", 30, 37), ("6", 114, 22), ("7", -52, -10), ("8", 10, 56),
-    ("9", 104, 35), ("10", -5, 50), ("11", 20, 45),
+    # (number, lon, lat, dx, dy): dx/dy nudge the numbered circle off the true
+    # spot (a thin leader line links it back) so clustered pins stay readable.
+    ("1", 51, 26, 10, 8), ("2", -107, 25, 0, 0), ("3", 33, 48, 10, -8),
+    ("4", -74, 41, 0, 0), ("5", 30, 37, -10, 8), ("6", 114, 22, 0, 0),
+    ("7", -52, -10, 0, 0), ("8", 10, 56, 0, -8), ("9", 104, 35, 0, 0),
+    ("10", -5, 50, -10, -6), ("11", -30, 30, 0, 0),
 ]
-for num, lon, lat in pins:
+for num, lon, lat, dx, dy in pins:
     px, py = lonlat(lon, lat)
+    if dx or dy:
+        d.line([(px, py), (px + dx, py + dy)], fill=RED, width=1)
+        d.ellipse([px - 2, py - 2, px + 2, py + 2], fill=RED)
+        px, py = px + dx, py + dy
     d.ellipse([px - 7, py - 7, px + 7, py + 7], fill=RED, outline=(255, 255, 255), width=1)
     d.text((px - 3, py - 6), num, font=F_SANS_B(8), fill=(255, 255, 255))
 d.text((M + 8, y + map_h - 14), "1 Bahrain  2 Sinaloa  3 Kryvyi Rih  4 New York  5 Antalya  6 Shenzhen  7 Brazil  8 Denmark  9 China  10 Europe  11 World",
@@ -354,15 +377,18 @@ also = [
     (34, "ANTALYA", "COP31 nears final deal Saturday."),
     (35, "SINALOA", "11 dead; fans flee gunfire."),
     (36, "BRAZIL", "Dengue cut ~69% in child study."),
+    (37, "HARARE", "Zimbabwe taxes lithium exports."),
+    (38, "COOK ISLANDS", "Cyclone Xavier weakens, Cat 5."),
+    (39, "LONDON", "Leeds stun Chelsea 4-1."),
 ]
-# two columns: 13 left, 12 right; one line per item, numbered on from the 11 cards
-n_left = 13
+# two columns: 14 left, 14 right; one line per item, numbered on from the 11 cards
+n_left = 14
 for col in range(2):
     cx = ax + col * (col_w // 2)
     items = also[:n_left] if col == 0 else also[n_left:]
     for row, (num, city, line) in enumerate(items):
         d.text((cx, ay + row * 10), "%d. %s — %s" % (num, city, line), font=F_SANS(9), fill=INK)
-ay += 13 * 10 + 4
+ay += 14 * 10 + 4
 vx = M + col_w + 12
 d.text((vx, y), "THE VERDICT", font=F_SANS_B(12), fill=RED)
 vy = para(d, (vx, y + 17),
@@ -384,7 +410,7 @@ y += 4
 
 # ================= DATE CHECK =================
 d.text((M, y), "DATE CHECK — LOUD IN THE HEADLINES, BUT NOT 21 NOVEMBER NEWS", font=F_SANS_B(11), fill=INK)
-y += 13
+y += 12
 dc = [
     "✕  Shenzhen Trump–Xi–Putin summit itself: 20 Nov.",
     "✕  World Court: Myanmar genocide ruling: 20 Nov.",
@@ -400,7 +426,7 @@ y += 4
 
 # ================= FOOTER =================
 y = para(d, (M, y),
-         "Every story here happened, or was first reported, on Saturday 21 November 2026. Sources: Reuters, AP, BBC, Xinhua, WSJ, CNN, Carbon Brief, Standard Topic, OneTurn, IntelChron, Majik, UKMTO, The Verge, InsightEx, Jerusalem Post.",
+         "Every story here happened, or was first reported, on Saturday 21 November 2026. Sources: Reuters, AP, BBC, Xinhua, WSJ, CNN, Carbon Brief, Standard Topic, OneTurn, IntelChron, Majik, UKMTO, The Verge, InsightEx, Jerusalem Post, Radarr Africa, LiveScore.",
          F_SANS(10), GREY, CW, leading=12)
 
 print("final y =", y, "canvas H =", H)
